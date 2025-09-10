@@ -3,6 +3,7 @@
 env/.env.*.user
 .DS_Store
 build
+dist
 appPackage/build
 .deployment
 .localConfigs
