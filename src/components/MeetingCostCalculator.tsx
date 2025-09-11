@@ -3,12 +3,8 @@ import {
   Button,
   Input,
   Label,
-  Card,
-  CardHeader,
-  CardPreview,
   Text,
   makeStyles,
-  Divider,
   Badge,
   Spinner,
 } from "@fluentui/react-components";
@@ -17,104 +13,64 @@ import { UserDataManager, type UserProfile, type MeetingSession } from "../utils
 
 const useStyles = makeStyles({
   container: {
-    padding: "24px",
-    maxWidth: "900px",
+    padding: "16px",
+    maxWidth: "600px",
     margin: "0 auto",
     minHeight: "100vh",
-    backgroundColor: "#faf9f8",
-  },
-  mainCard: {
-    marginBottom: "24px",
-    boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-    borderRadius: "12px",
-    overflow: "hidden",
-  },
-  headerCard: {
-    background: "linear-gradient(135deg, #0078d4 0%, #106ebe 100%)",
-    color: "white",
-    padding: "24px",
-    textAlign: "center",
-  },
-  welcomeSection: {
-    padding: "32px",
-    textAlign: "center",
     backgroundColor: "white",
   },
-  statsSection: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-    gap: "16px",
-    margin: "24px 0",
-  },
-  statCard: {
+  card: {
+    marginBottom: "16px",
     padding: "20px",
-    backgroundColor: "#f8f9fa",
-    borderRadius: "8px",
-    textAlign: "center",
     border: "1px solid #e1dfdd",
+    borderRadius: "8px",
+  },
+  header: {
+    textAlign: "center",
+    marginBottom: "24px",
   },
   inputGroup: {
+    marginBottom: "16px",
+  },
+  timer: {
+    textAlign: "center",
     marginBottom: "20px",
-    maxWidth: "300px",
-    margin: "20px auto",
-  },
-  meetingSection: {
-    padding: "32px",
-    backgroundColor: "white",
-  },
-  timeTracking: {
-    display: "flex",
-    gap: "16px",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "24px",
-    backgroundColor: "#f8f9fa",
-    borderRadius: "12px",
-    marginBottom: "24px",
   },
   timerDisplay: {
-    fontSize: "32px",
-    fontWeight: "700",
+    fontSize: "28px",
+    fontWeight: "600",
     color: "#0078d4",
-    minWidth: "200px",
-    textAlign: "center",
+    margin: "8px 0",
   },
-  participantCard: {
-    marginBottom: "12px",
-    padding: "20px",
+  controls: {
+    display: "flex",
+    gap: "8px",
+    justifyContent: "center",
+    marginBottom: "20px",
+    flexWrap: "wrap",
+  },
+  participant: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "12px",
+    marginBottom: "8px",
+    backgroundColor: "#f8f9fa",
+    borderRadius: "6px",
     border: "1px solid #e1dfdd",
-    borderRadius: "12px",
-    backgroundColor: "white",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-    transition: "all 0.2s ease",
-    ":hover": {
-      boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-      transform: "translateY(-1px)",
-    },
   },
   currentUser: {
     backgroundColor: "#e6f3ff",
-    border: "2px solid #0078d4",
-    ":hover": {
-      backgroundColor: "#e6f3ff",
-    },
+    border: "1px solid #0078d4",
   },
-  resultSection: {
-    marginTop: "32px",
-    padding: "24px",
+  summary: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "16px",
     backgroundColor: "#f3f2f1",
-    borderRadius: "12px",
-    border: "2px solid #0078d4",
-  },
-  totalCost: {
-    fontSize: "24px",
-    fontWeight: "700",
-    color: "#0078d4",
-  },
-  yourShare: {
-    fontSize: "20px",
-    fontWeight: "600",
-    color: "#107c10",
+    borderRadius: "6px",
+    marginTop: "16px",
   },
   loadingContainer: {
     display: "flex",
@@ -122,7 +78,7 @@ const useStyles = makeStyles({
     alignItems: "center",
     justifyContent: "center",
     minHeight: "200px",
-    gap: "16px",
+    gap: "12px",
   },
 });
 
@@ -306,234 +262,136 @@ export default function MeetingCostCalculator() {
   if (isLoadingUser) {
     return (
       <div className={styles.container}>
-        <Card className={styles.mainCard}>
-          <div className={styles.loadingContainer}>
-            <Spinner size="large" />
-            <Text size={500} weight="semibold">Loading your profile...</Text>
-            <Text size={300} style={{ color: "#605e5c" }}>Setting up your meeting cost tracker</Text>
-          </div>
-        </Card>
+        <div className={styles.loadingContainer}>
+          <Spinner size="large" />
+          <Text>Loading...</Text>
+        </div>
       </div>
     );
   }
 
   return (
     <div className={styles.container}>
-      {/* Header */}
-      <Card className={styles.mainCard}>
-        <div className={styles.headerCard}>
-          <Text size={600} weight="bold">💰 Meeting Cost Tracker</Text>
-          <Text size={400} style={{ marginTop: "8px", opacity: 0.9 }}>
-            Track your time, know your worth
-          </Text>
-        </div>
-      </Card>
+      <div className={styles.header}>
+        <Text size={600} weight="bold">Meeting Cost Tracker</Text>
+      </div>
 
       {!currentUser ? (
-        /* Welcome Screen */
-        <Card className={styles.mainCard}>
-          <div className={styles.welcomeSection}>
-            <Text size={600} weight="bold" style={{ marginBottom: "16px", display: "block" }}>
-              👋 Welcome, {userProfile?.name}!
-            </Text>
+        <div className={styles.card}>
+          <Text size={500} weight="semibold" style={{ marginBottom: "32px" }}>
+            Welcome, {userProfile?.name}!
+          </Text>
+          
+          <div className={styles.inputGroup} style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "24px" }}>
+            <Label htmlFor="userRate" style={{ fontWeight: "600", minWidth: "120px" }}>
+              Hourly Rate ($)
+            </Label>
+            <Input
+              id="userRate"
+              type="number"
+              size="large"
+              value={currentUserRate.toString()}
+              onChange={(_, data) => setCurrentUserRate(Number(data.value) || 0)}
+              placeholder="Enter your hourly rate"
+              style={{ flex: "1" }}
+            />
+          </div>
 
-            {/* Stats Section */}
-            <div className={styles.statsSection}>
-              <div className={styles.statCard}>
-                <Text size={500} weight="bold" style={{ color: "#0078d4", display: "block" }}>
-                  {userProfile?.totalMeetings || 0}
-                </Text>
-                <Text size={300} style={{ color: "#605e5c" }}>Total Meetings</Text>
-              </div>
-              <div className={styles.statCard}>
-                <Text size={500} weight="bold" style={{ color: "#107c10", display: "block" }}>
-                  ${userProfile?.totalCost.toFixed(2) || '0.00'}
-                </Text>
-                <Text size={300} style={{ color: "#605e5c" }}>Total Cost</Text>
-              </div>
-              <div className={styles.statCard}>
-                <Text size={500} weight="bold" style={{ color: "#d83b01", display: "block" }}>
-                  ${userProfile?.hourlyRate || 0}
-                </Text>
-                <Text size={300} style={{ color: "#605e5c" }}>Last Rate</Text>
+          <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+            <Button
+              appearance="primary"
+              onClick={joinMeeting}
+              disabled={currentUserRate <= 0}
+            >
+              Join Meeting
+            </Button>
+            <Button
+              appearance="subtle"
+              onClick={exportUserData}
+            >
+              Export Data
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className={styles.card}>
+            <div className={styles.timer}>
+              <Badge
+                appearance="filled"
+                color={isTimerRunning ? "success" : "subtle"}
+              >
+                {isTimerRunning ? "LIVE" : "PAUSED"}
+              </Badge>
+              <div className={styles.timerDisplay}>
+                {meetingDuration} min
               </div>
             </div>
-
-            <Divider style={{ margin: "32px 0" }} />
-
-            <Text size={500} weight="semibold" style={{ marginBottom: "24px", display: "block" }}>
-              🚀 Ready to track this meeting?
-            </Text>
-
-            <div className={styles.inputGroup}>
-              <Label htmlFor="userRate" style={{ fontSize: "16px", fontWeight: "600" }}>
-                Your Hourly Rate ($)
-              </Label>
-              <Input
-                id="userRate"
-                type="number"
-                size="large"
-                value={currentUserRate.toString()}
-                onChange={(_, data) => setCurrentUserRate(Number(data.value) || 0)}
-                placeholder={userProfile?.hourlyRate ? `Previous rate: $${userProfile.hourlyRate}` : "Enter your hourly rate"}
-                style={{ fontSize: "18px", padding: "12px" }}
-              />
-            </div>
-
-            <div style={{ display: "flex", gap: "16px", justifyContent: "center", alignItems: "center" }}>
-              <Button
-                appearance="primary"
-                size="large"
-                onClick={joinMeeting}
-                disabled={currentUserRate <= 0}
-                style={{ minWidth: "160px" }}
-              >
-                🎯 Join Meeting
-              </Button>
-              <Button
-                appearance="subtle"
-                size="medium"
-                onClick={exportUserData}
-              >
-                📊 Export Data
+            
+            <div className={styles.controls}>
+              {!isTimerRunning ? (
+                <Button appearance="primary" onClick={startMeeting}>
+                  Start
+                </Button>
+              ) : (
+                <Button appearance="secondary" onClick={stopMeeting}>
+                  Stop
+                </Button>
+              )}
+              <Button appearance="outline" onClick={resetMeeting}>
+                Reset
               </Button>
             </div>
           </div>
-        </Card>
-      ) : (
-        /* Meeting In Progress */
-        <>
-          {/* Timer Section */}
-          <Card className={styles.mainCard}>
-            <div className={styles.timeTracking}>
-              <div style={{ textAlign: "center" }}>
-                <Badge
-                  appearance="filled"
-                  color={isTimerRunning ? "success" : "subtle"}
-                  size="large"
-                  style={{ marginBottom: "16px" }}
-                >
-                  {isTimerRunning ? "🔴 LIVE" : "⏸️ PAUSED"}
-                </Badge>
-                <div className={styles.timerDisplay}>
-                  ⏱️ {meetingDuration} min
-                </div>
-                <Text size={300} style={{ color: "#605e5c" }}>
-                  Meeting Duration
-                </Text>
-              </div>
-              
-              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                {!isTimerRunning ? (
-                  <Button 
-                    appearance="primary" 
-                    size="large" 
-                    onClick={startMeeting}
-                    style={{ minWidth: "120px" }}
-                  >
-                    ▶️ Start
-                  </Button>
-                ) : (
-                  <Button 
-                    appearance="secondary" 
-                    size="large" 
-                    onClick={stopMeeting}
-                    style={{ minWidth: "120px" }}
-                  >
-                    ⏹️ Stop
-                  </Button>
-                )}
-                <Button 
-                  appearance="outline" 
-                  size="large" 
-                  onClick={resetMeeting}
-                  style={{ minWidth: "120px" }}
-                >
-                  🔄 Reset
-                </Button>
-              </div>
-            </div>
-          </Card>
 
-          {/* Participants Section */}
-          <Card className={styles.mainCard}>
-            <div className={styles.meetingSection}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-                <Text size={600} weight="bold">
-                  👥 Meeting Participants
-                </Text>
-                <Badge appearance="filled" color="brand" size="large">
-                  {participants.length} {participants.length === 1 ? 'person' : 'people'}
-                </Badge>
-              </div>
-              
-              {participants.map((participant) => (
-                <div
-                  key={participant.id}
-                  className={`${styles.participantCard} ${
-                    participant.isCurrentUser ? styles.currentUser : ""
-                  }`}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
-                    <div style={{ flex: "1", minWidth: "0" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px", flexWrap: "wrap" }}>
-                        <Text weight="bold" size={500} style={{ wordBreak: "break-word" }}>
-                          {participant.name}
-                        </Text>
-                        {participant.isCurrentUser && (
-                          <Badge appearance="filled" color="success" size="small">YOU</Badge>
-                        )}
-                      </div>
-                      <Text size={300} style={{ color: "#605e5c" }}>
-                        💰 ${participant.hourlyRate}/hour
-                      </Text>
-                    </div>
-                    <div style={{ textAlign: "right", flexShrink: "0" }}>
-                      <Text size={600} weight="bold" style={{ color: "#107c10", display: "block" }}>
-                        ${calculateIndividualCost(participant).toFixed(2)}
-                      </Text>
-                      <Text size={300} style={{ color: "#605e5c", whiteSpace: "nowrap" }}>
-                        Cost so far
-                      </Text>
-                    </div>
+          <div className={styles.card}>
+            <Text size={500} weight="semibold" style={{ marginBottom: "16px" }}>
+              Participants ({participants.length})
+            </Text>
+            
+            {participants.map((participant) => (
+              <div
+                key={participant.id}
+                className={`${styles.participant} ${
+                  participant.isCurrentUser ? styles.currentUser : ""
+                }`}
+              >
+                <div>
+                  <Text weight="semibold">{participant.name}</Text>
+                  {participant.isCurrentUser && (
+                    <Badge appearance="filled" color="success" size="small" style={{ marginLeft: "8px" }}>YOU</Badge>
+                  )}
+                  <div>
+                    <Text size={300} style={{ color: "#605e5c" }}>
+                      ${participant.hourlyRate}/hour
+                    </Text>
                   </div>
                 </div>
-              ))}
-            </div>
-          </Card>
+                <Text weight="bold" style={{ color: "#107c10" }}>
+                  ${calculateIndividualCost(participant).toFixed(2)}
+                </Text>
+              </div>
+            ))}
+          </div>
 
-          {/* Results Section */}
-          <Card className={styles.mainCard}>
-            <div className={styles.resultSection}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "24px" }}>
-                <div style={{ textAlign: "center", flex: "1", minWidth: "200px" }}>
-                  <Text size={300} style={{ color: "#605e5c", marginBottom: "8px", display: "block" }}>
-                    💸 Total Meeting Cost
-                  </Text>
-                  <Text className={styles.totalCost}>
-                    ${calculateTotalCost().toFixed(2)}
-                  </Text>
-                  <Text size={300} style={{ color: "#605e5c", marginTop: "4px" }}>
-                    All {participants.length} participants
+          <div className={styles.card}>
+            <div className={styles.summary}>
+              <div>
+                <Text size={300} style={{ color: "#605e5c" }}>Total Cost</Text>
+                <Text size={500} weight="bold" style={{ color: "#0078d4" }}>
+                  ${calculateTotalCost().toFixed(2)}
+                </Text>
+              </div>
+              {currentUser && (
+                <div style={{ textAlign: "right" }}>
+                  <Text size={300} style={{ color: "#605e5c" }}>Your Share</Text>
+                  <Text size={500} weight="bold" style={{ color: "#107c10" }}>
+                    ${calculateIndividualCost(currentUser).toFixed(2)}
                   </Text>
                 </div>
-                
-                {currentUser && (
-                  <div style={{ textAlign: "center", flex: "1", minWidth: "200px" }}>
-                    <Text size={300} style={{ color: "#605e5c", marginBottom: "8px", display: "block" }}>
-                      🎯 Your Share
-                    </Text>
-                    <Text className={styles.yourShare}>
-                      ${calculateIndividualCost(currentUser).toFixed(2)}
-                    </Text>
-                    <Text size={300} style={{ color: "#605e5c", marginTop: "4px" }}>
-                      {calculateTotalCost() > 0 ? (((calculateIndividualCost(currentUser) / calculateTotalCost()) * 100).toFixed(1)) : '0'}% of total
-                    </Text>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
-          </Card>
+          </div>
         </>
       )}
     </div>
