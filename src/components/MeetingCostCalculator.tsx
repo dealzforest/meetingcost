@@ -103,22 +103,31 @@ export default function MeetingCostCalculator() {
   const [isHost, setIsHost] = useState<boolean>(false);
   const [currentUserRate, setCurrentUserRate] = useState<number>(0);
   const [meetingData, setMeetingData] = useState<MeetingData | null>(null);
-  const [scheduledDuration, setScheduledDuration] = useState<number>(60); // default 60 minutes
+  const [scheduledDuration, setScheduledDuration] = useState<number>(60);
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
 
-  // Load user profile from Teams context
+  // Load user profile and meeting details from Teams context
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
         const context = await microsoftTeams.app.getContext();
+        console.log(' context: ', context);
         const userId = context.user?.id || 'default-user';
         const userName = context.user?.displayName || context.user?.userPrincipalName || 'Unknown User';
         const meetingId = context.meeting?.id || context.chat?.id || 'demo-meeting';
         
+        // Default duration - Teams basic context doesn't include meeting schedule details
+        // To get actual meeting duration, you would need to:
+        // 1. Use Graph API with meeting ID to fetch meeting details
+        // 2. Or allow host to set duration manually 
+        // 3. Or use calendar integration
+        let duration = 60; // Default to 1 hour
+        
         setUserId(userId);
         setUserName(userName);
         setMeetingId(meetingId);
+        setScheduledDuration(Math.max(duration, 1)); // Ensure minimum 1 minute
         setIsHost(false); // Determined by server
         
       } catch (error) {
@@ -126,6 +135,7 @@ export default function MeetingCostCalculator() {
         setUserId('fallback-user');
         setUserName('Demo User');
         setMeetingId('demo-meeting');
+        setScheduledDuration(60);
         setIsHost(false);
       } finally {
         setIsLoadingUser(false);
@@ -238,20 +248,11 @@ export default function MeetingCostCalculator() {
           Welcome, {userName}!
         </Text>
         
-        {isHost && (
-          <div className={styles.inputGroup} style={{ marginBottom: "16px" }}>
-            <Label htmlFor="duration" style={{ fontWeight: "600" }}>
-              Meeting Duration (minutes)
-            </Label>
-            <Input
-              id="duration"
-              type="number"
-              value={scheduledDuration.toString()}
-              onChange={(_, data) => setScheduledDuration(Number(data.value) || 60)}
-              placeholder="60"
-            />
-          </div>
-        )}
+        <div className={styles.inputGroup} style={{ marginBottom: "16px" }}>
+          <Text size={300} style={{ color: "#605e5c" }}>
+            Duration: {scheduledDuration} minutes (default)
+          </Text>
+        </div>
         
         <div className={styles.inputGroup}>
           <Label htmlFor="userRate" style={{ fontWeight: "600" }}>
