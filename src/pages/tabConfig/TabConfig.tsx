@@ -52,11 +52,11 @@ export default function TabConfig() {
         <Text size={400} block>
           To learn more visit{" "}
           <a
-            href="https://happycompanies.com/"
+            href="https://meeting-cost-tracker.com.com/"
             target="_blank"
             rel="noreferrer"
           >
-            happycompanies.com
+            meeting-cost-tracker.com
           </a>
           .
         </Text>

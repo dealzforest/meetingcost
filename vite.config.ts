@@ -8,10 +8,11 @@ export default defineConfig({
     global: "globalThis",
   },
   server: {
-    port: 53000,
-    https: {
-      cert: process.env.SSL_CRT_FILE ? fs.readFileSync(process.env.SSL_CRT_FILE) : undefined,
-      key: process.env.SSL_KEY_FILE ? fs.readFileSync(process.env.SSL_KEY_FILE) : undefined,
-    },
+    port: 3000,
+    allowedHosts: ['secure-presumably-muskox.ngrok-free.app']
+    // https: {
+    //   cert: process.env.SSL_CRT_FILE ? fs.readFileSync(process.env.SSL_CRT_FILE) : undefined,
+    //   key: process.env.SSL_KEY_FILE ? fs.readFileSync(process.env.SSL_KEY_FILE) : undefined,
+    // },
   },
 });
