@@ -293,7 +293,7 @@ export default function MeetingCostCalculator() {
       {isHost && meetingData && meetingData.participants.length > 0 && (
         <div className={styles.card}>
           <Text size={500} weight="semibold" style={{ marginBottom: "16px" }}>
-            All Participants ({meetingData.participants.length})
+            Meeting Participants ({meetingData.participants.length})
           </Text>
           
           {meetingData.participants.map((participant) => (
@@ -302,12 +302,12 @@ export default function MeetingCostCalculator() {
                 <Text weight="semibold">{participant.name}</Text>
                 <div>
                   <Text size={300} style={{ color: "#605e5c" }}>
-                    ${participant.hourlyRate}/hour
+                    {participant.hourlyRate > 0 ? "Rate set" : "Rate pending"}
                   </Text>
                 </div>
               </div>
-              <Text weight="bold" style={{ color: "#107c10" }}>
-                ${calculateIndividualCost(participant).toFixed(2)}
+              <Text size={300} style={{ color: "#605e5c" }}>
+                {participant.hourlyRate > 0 ? "✓ Configured" : "⏳ Pending"}
               </Text>
             </div>
           ))}
@@ -317,6 +317,9 @@ export default function MeetingCostCalculator() {
               <Text size={300} style={{ color: "#605e5c" }}>Total Meeting Cost</Text>
               <Text size={500} weight="bold" style={{ color: "#d13438" }}>
                 ${calculateTotalCost().toFixed(2)}
+              </Text>
+              <Text size={200} style={{ color: "#605e5c" }}>
+                ({meetingData.participants.length} participants × {scheduledDuration} min)
               </Text>
             </div>
           </div>
