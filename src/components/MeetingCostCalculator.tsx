@@ -91,7 +91,6 @@ interface MeetingData {
   meetingId: string;
   participants: MeetingParticipant[];
   scheduledDuration: number; // in minutes
-  hostId: string;
 }
 
 export default function MeetingCostCalculator() {
@@ -100,7 +99,6 @@ export default function MeetingCostCalculator() {
   const [meetingId, setMeetingId] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
   const [userName, setUserName] = useState<string>("");
-  const [isHost, setIsHost] = useState<boolean>(false);
   const [currentUserRate, setCurrentUserRate] = useState<number>(0);
   const [meetingData, setMeetingData] = useState<MeetingData | null>(null);
   const [scheduledDuration, setScheduledDuration] = useState<number>(60);
@@ -112,7 +110,6 @@ export default function MeetingCostCalculator() {
     const loadUserProfile = async () => {
       try {
         const context = await microsoftTeams.app.getContext();
-        console.log(' context: ', context);
         const userId = context.user?.id || 'default-user';
         const userName = context.user?.displayName || context.user?.userPrincipalName || 'Unknown User';
         const meetingId = context.meeting?.id || context.chat?.id || 'demo-meeting';
@@ -128,7 +125,6 @@ export default function MeetingCostCalculator() {
         setUserName(userName);
         setMeetingId(meetingId);
         setScheduledDuration(Math.max(duration, 1)); // Ensure minimum 1 minute
-        setIsHost(false); // Determined by server
         
       } catch (error) {
         // Fallback for standalone mode
@@ -136,7 +132,6 @@ export default function MeetingCostCalculator() {
         setUserName('Demo User');
         setMeetingId('demo-meeting');
         setScheduledDuration(60);
-        setIsHost(false);
       } finally {
         setIsLoadingUser(false);
       }
@@ -167,10 +162,7 @@ export default function MeetingCostCalculator() {
         });
       });
 
-      newSocket.on('meeting-data', (data: MeetingData & { userIsHost?: boolean }) => {
-        if (data.userIsHost !== undefined) {
-          setIsHost(data.userIsHost);
-        }
+      newSocket.on('meeting-data', (data: MeetingData) => {
         setMeetingData(data);
       });
 
@@ -218,6 +210,11 @@ export default function MeetingCostCalculator() {
     return meetingData.participants.reduce((total, participant) => {
       return total + calculateIndividualCost(participant);
     }, 0);
+  };
+
+  const calculateAverageCost = (): number => {
+    if (!meetingData || meetingData.participants.length === 0) return 0;
+    return calculateTotalCost() / meetingData.participants.length;
   };
 
   const getCurrentUserCost = (): number => {
@@ -291,7 +288,7 @@ export default function MeetingCostCalculator() {
         </div>
       </div>
 
-      {isHost && meetingData && meetingData.participants.length > 0 && (
+      {meetingData && meetingData.participants.length > 0 && (
         <div className={styles.card}>
           <Text size={500} weight="semibold" style={{ marginBottom: "16px" }}>
             Meeting Participants ({meetingData.participants.length})
@@ -324,19 +321,12 @@ export default function MeetingCostCalculator() {
               </Text>
             </div>
           </div>
-        </div>
-      )}
-
-      {!isHost && meetingData && meetingData.participants.length > 0 && (
-        <div className={styles.card}>
-          <div className={styles.summary}>
+          
+          <div className={styles.summary} style={{ marginTop: "8px" }}>
             <div>
-              <Text size={300} style={{ color: "#605e5c" }}>Total Meeting Cost</Text>
-              <Text size={500} weight="bold" style={{ color: "#d13438" }}>
-                ${calculateTotalCost().toFixed(2)}
-              </Text>
-              <Text size={200} style={{ color: "#605e5c" }}>
-                ({meetingData.participants.length} participants × {scheduledDuration} min)
+              <Text size={300} style={{ color: "#605e5c" }}>Average Cost per Participant</Text>
+              <Text size={500} weight="bold" style={{ color: "#0078d4" }}>
+                ${calculateAverageCost().toFixed(2)}
               </Text>
             </div>
           </div>

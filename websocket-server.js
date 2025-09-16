@@ -21,12 +21,10 @@ io.on('connection', (socket) => {
       meetings[meetingId] = {
         meetingId,
         participants: [],
-        scheduledDuration: 60,
-        hostId: userId
+        scheduledDuration: 60
       };
     }
     
-    const isHost = meetings[meetingId].hostId === userId;
     
     const existingParticipant = meetings[meetingId].participants.find(p => p.id === userId);
     if (!existingParticipant) {
@@ -37,10 +35,7 @@ io.on('connection', (socket) => {
       });
     }
     
-    socket.emit('meeting-data', {
-      ...meetings[meetingId],
-      userIsHost: isHost
-    });
+    socket.emit('meeting-data', meetings[meetingId]);
     
     socket.to(meetingId).emit('user-joined', { userId, userName });
   });
