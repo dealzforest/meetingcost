@@ -108,18 +108,49 @@ export default function MeetingCostCalculator() {
   // Load user profile and meeting details from Teams context
   useEffect(() => {
     const loadUserProfile = async () => {
+      console.log('[MeetingCostCalculator] Starting to load user profile and meeting details');
       try {
+        await microsoftTeams.app.initialize();
+        console.log('[MeetingCostCalculator] Teams SDK initialized successfully');
+        
         const context = await microsoftTeams.app.getContext();
+        console.log('[MeetingCostCalculator] Teams context:', context);
         const userId = context.user?.id || 'default-user';
         const userName = context.user?.displayName || context.user?.userPrincipalName || 'Unknown User';
         const meetingId = context.meeting?.id || context.chat?.id || 'demo-meeting';
         
-        // Default duration - Teams basic context doesn't include meeting schedule details
-        // To get actual meeting duration, you would need to:
-        // 1. Use Graph API with meeting ID to fetch meeting details
-        // 2. Or allow host to set duration manually 
-        // 3. Or use calendar integration
+        // Try to get meeting duration from Teams API
         let duration = 60; // Default to 1 hour
+        
+        try {
+          microsoftTeams.meeting.getMeetingDetails((error, meetingDetails) => {
+            if (error) {
+              console.log('Could not fetch meeting details:', error);
+              return;
+            }
+            
+            console.log('Meeting details:', meetingDetails);
+            
+            if (meetingDetails?.details) {
+              const details = meetingDetails.details;
+              
+              // Check if this is a scheduled meeting (IMeetingDetails) vs call (ICallDetails)
+              if ('scheduledEndTime' in details && details.scheduledStartTime && details.scheduledEndTime) {
+                const startTime = new Date(details.scheduledStartTime);
+                const endTime = new Date(details.scheduledEndTime);
+                const calculatedDuration = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
+                console.log(`Calculated duration: ${calculatedDuration} minutes`);
+                setScheduledDuration(Math.max(calculatedDuration, 1));
+              }
+              else {
+                console.log('This appears to be a call rather than a scheduled meeting - no duration available');
+              }
+            }
+          });
+        } catch (error) {
+          console.log('Could not fetch meeting details:', error);
+          // Fall back to default duration
+        }
         
         setUserId(userId);
         setUserName(userName);
@@ -247,7 +278,7 @@ export default function MeetingCostCalculator() {
         
         <div className={styles.inputGroup} style={{ marginBottom: "16px" }}>
           <Text size={300} style={{ color: "#605e5c" }}>
-            Duration: {scheduledDuration} minutes (default)
+            Duration: {scheduledDuration} minutes {scheduledDuration === 60 ? '(default)' : '(from Teams)'}
           </Text>
         </div>
         
