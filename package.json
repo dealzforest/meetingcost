@@ -6,38 +6,23 @@
     },
     "type": "module",
     "private": true,
-    "dependencies": {
-        "@fluentui/react-components": "^9.55.1",
-        "@microsoft/teams-js": "^2.31.1",
-        "@microsoft/teamsfx": "^4.0.0",
-        "@microsoft/teamsfx-react": "^4.0.0",
-        "axios": "^1.12.2",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "react-router-dom": "^6.8.0",
-        "socket.io-client": "^4.8.1"
-    },
+    "workspaces": [
+        "frontend",
+        "backend"
+    ],
     "devDependencies": {
-        "@types/node": "^18.0.0",
-        "@types/react": "^18.0.0",
-        "@types/react-dom": "^18.0.0",
-        "@types/react-router-dom": "^5.3.3",
-        "@vitejs/plugin-react": "^4.3.1",
-        "concurrently": "^8.2.2",
-        "env-cmd": "^10.1.0",
-        "socket.io": "^4.8.1",
-        "typescript": "^4.1.2",
-        "vite": "^6.0.0"
+        "concurrently": "^8.2.2"
     },
     "scripts": {
-        "dev:teamsfx": "npm run dev-tab:teamsfx",
-        "dev-tab:teamsfx": "env-cmd --silent -f .localConfigs npm run start",
-        "start": "vite",
-        "build": "tsc && vite build",
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "serve": "vite preview",
-        "server:start": "node websocket-server.js",
-        "dev:full": "concurrently \"npm run server:start\" \"npm run start\""
+        "install:all": "npm install && npm install --prefix frontend && npm install --prefix backend",
+        "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+        "dev:frontend": "cd frontend && npm run dev",
+        "dev:backend": "cd backend && func start --port 7071",
+        "build": "npm run build:frontend && npm run build:backend",
+        "build:frontend": "cd frontend && npm run build",
+        "build:backend": "cd backend && npm run build",
+        "start:frontend": "cd frontend && npm run preview",
+        "start:backend": "cd backend && func start"
     },
     "eslintConfig": {
         "extends": [

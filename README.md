@@ -1,59 +1,232 @@
-# Overview of the React with Fluent UI template
+# Meeting Cost Tracker
 
-This app showcases how to craft a visually appealing web page that can be embedded in Microsoft Teams, Outlook and the Microsoft 365 app with React and Fluent UI. The app also enhances the end-user experiences with built-in single sign-on and data from Microsoft Graph.
+A Teams app for tracking meeting costs in real-time using Azure Functions architecture.
 
-This app has adopted [On-Behalf-Of flow](https://learn.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-on-behalf-of-flow) to implement SSO, and uses Azure Functions as middle-tier service, and make authenticated requests to call Graph from Azure Functions.
+## Features
 
-## Get started with the React with Fluent UI template
+- 💰 **Dual Cost Estimates** - Shows 30-minute and 1-hour meeting cost projections
+- 👥 **Real-time Participant Tracking** - See who's joined with polling-based updates
+- ☁️ **Serverless Architecture** - Azure Functions backend with HTTP polling
+- 📊 **Cost Analytics** - View individual costs, averages, and totals
+- ⚡ **Simplified Setup** - No WebSocket dependencies, serverless-friendly
 
-> **Prerequisites**
->
-> To run the command bot template in your local dev machine, you will need:
->
-> - [Node.js](https://nodejs.org/), supported versions: 18, 20, 22
-> - A [Microsoft 365 account for development](https://docs.microsoft.com/microsoftteams/platform/toolkit/accounts)
->   Please note that after you enrolled your developer tenant in Office 365 Target Release, it may take couple days for the enrollment to take effect.
-> - [Microsoft 365 Agents Toolkit Visual Studio Code Extension](https://aka.ms/teams-toolkit) version 5.0.0 and higher or [Microsoft 365 Agents Toolkit CLI](https://aka.ms/teamsfx-toolkit-cli)
+## Prerequisites
 
-1. First, select the Microsoft 365 Agents Toolkit icon on the left in the VS Code toolbar.
-2. In the Account section, sign in with your [Microsoft 365 account](https://docs.microsoft.com/microsoftteams/platform/toolkit/accounts) if you haven't already.
-3. Press F5 to start debugging which launches your app in Teams using a web browser. Select `Debug in Teams (Edge)` or `Debug in Teams (Chrome)`.
-4. When Teams launches in the browser, select the Add button in the dialog to install your app to Teams.
+- Node.js 18 or higher
+- Azure Functions Core Tools: `npm install -g azure-functions-core-tools@4 --unsafe-perm true`
+- Microsoft Teams account with admin privileges
+- Azure App Registration
 
-**Congratulations**! You are running an application that can now show a beautiful web page in Teams, Outlook and the Microsoft 365 app.
+## Project Structure
 
-![Personal tab demo](https://github.com/OfficeDev/TeamsFx/assets/63089166/9599b53c-8f89-493f-9f7e-9edae1f9be54)
+```
+├── frontend/          # React app (Vite + TypeScript)
+├── backend/           # Azure Functions
+├── shared/            # Shared utilities and storage
+├── appPackage/        # Teams app manifest
+└── package.json       # Root workspace configuration
+```
 
-## What's included in the template
+## Setup & Development
 
-| Folder       | Contents                                                                                                               |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `.vscode`    | VSCode files for debugging                                                                                             |
-| `appPackage` | Templates for the application manifest                                                                           |
-| `env`        | Environment files                                                                                                      |
-| `infra`      | Templates for provisioning Azure resources                                                                             |
-| `src`        | The source code for the frontend of the Tab application. Implemented with Fluent UI Framework.                         |
-| `api`        | The source code for the backend of the Tab application. Implemented single-sign-on with OBO flow using Azure Functions. |
+1. **Install all dependencies:**
+   ```bash
+   npm run install:all
+   ```
 
-The following are Microsoft 365 Agents Toolkit specific project files. You can [visit a complete guide on Github](https://github.com/OfficeDev/TeamsFx/wiki/Teams-Toolkit-Visual-Studio-Code-v5-Guide#overview) to understand how Microsoft 365 Agents Toolkit works.
+2. **Start development environment:**
+   ```bash
+   npm run dev
+   ```
+   This runs both frontend (port 3000) and backend (port 7071) concurrently.
 
-| File                 | Contents                                                                                                                                                                                                                                                |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `m365agents.yml`       | This is the main Microsoft 365 Agents Toolkit project file. The project file defines two primary things: Properties and configuration Stage definitions.                                                                                                               |
-| `m365agents.local.yml` | This overrides `m365agents.yml` with actions that enable local execution and debugging.                                                                                                                                                                   |
-| `aad.manifest.json`  | This file defines the configuration of Microsoft Entra app. This template will only provision [single tenant](https://learn.microsoft.com/azure/active-directory/develop/single-and-multi-tenant-apps#who-can-sign-in-to-your-app) Microsoft Entra app. |
+3. **Environment Configuration:**
+   - Copy `.env.example` to `.env` and configure as needed
+   - Frontend uses `REACT_APP_API_BASE_URL` to connect to Azure Functions
 
-## Extend the React with Fluent UI template
+4. **Set up ngrok tunnel for Teams:**
+   ```bash
+   ngrok http 3000
+   ```
+   Copy the HTTPS URL for the Teams manifest.
 
-Following documentation will help you to extend the React with Fluent UI template.
+### 3. Azure App Registration
 
-- [Add or manage the environment](https://learn.microsoft.com/microsoftteams/platform/toolkit/teamsfx-multi-env)
-- [Create multi-capability app](https://learn.microsoft.com/microsoftteams/platform/toolkit/add-capability)
-- [Use an existing Microsoft Entra application](https://learn.microsoft.com/microsoftteams/platform/toolkit/use-existing-aad-app)
-- [Customize the app manifest](https://learn.microsoft.com/microsoftteams/platform/toolkit/teamsfx-preview-and-customize-app-manifest)
-- Host your app in Azure by [provision cloud resources](https://learn.microsoft.com/microsoftteams/platform/toolkit/provision) and [deploy the code to cloud](https://learn.microsoft.com/microsoftteams/platform/toolkit/deploy)
-- [Collaborate on app development](https://learn.microsoft.com/microsoftteams/platform/toolkit/teamsfx-collaboration)
-- [Set up the CI/CD pipeline](https://learn.microsoft.com/microsoftteams/platform/toolkit/use-cicd-template)
-- [Publish the app to your organization or the Microsoft app store](https://learn.microsoft.com/microsoftteams/platform/toolkit/publish)
-- [Enable the app for multi-tenant](https://github.com/OfficeDev/TeamsFx/wiki/Multi-tenancy-Support-for-Azure-AD-app)
-- [Preview the app on mobile clients](https://aka.ms/teamsfx-mobile)
+1. Go to [Azure Portal](https://portal.azure.com) → **App registrations**
+2. Click **"New registration"**
+3. Configure:
+   - **Name**: `Meeting-Cost-Tracker-TS-aad`
+   - **Supported account types**: `Accounts in any organizational directory (Any Azure AD directory - Multitenant)`
+   - **Redirect URI**: Leave blank for now
+4. Copy the **Application (client) ID** - you'll need this for the manifest
+
+#### Add API Permissions (Optional)
+
+The app now works without special API permissions, but you can optionally add basic permissions:
+
+1. Go to **API permissions** → **Add a permission**
+2. Select **Microsoft Graph** → **Delegated permissions**
+3. Add these permissions (optional):
+   - `User.Read` (basic user info)
+4. Click **Grant admin consent for [Your Organization]**
+
+### 4. Update App Manifest
+
+Edit `appPackage/manifest.json`:
+
+```json
+{
+  "webApplicationInfo": {
+    "id": "YOUR_AZURE_APP_CLIENT_ID"
+  },
+  "developer": {
+    "websiteUrl": "https://your-ngrok-url.ngrok-free.app",
+    "privacyUrl": "https://your-ngrok-url.ngrok-free.app/privacy",
+    "termsOfUseUrl": "https://your-ngrok-url.ngrok-free.app/terms"
+  },
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://your-ngrok-url.ngrok-free.app/config"
+    }
+  ],
+  "validDomains": [
+    "your-ngrok-url.ngrok-free.app"
+  ]
+}
+```
+
+## Available Scripts
+
+- `npm run dev` - Start both frontend and backend in development mode
+- `npm run dev:frontend` - Start only the React frontend (port 3000)
+- `npm run dev:backend` - Start only the Azure Functions backend (port 7071)
+- `npm run build` - Build both frontend and backend for production
+- `npm run install:all` - Install dependencies for all projects
+
+### 6. Create Teams App Package
+
+```bash
+cd appPackage
+zip -r MeetingCostTracker-v1.0.28.zip manifest.json color.png outline.png
+```
+
+### 7. Deploy to Teams
+
+1. Go to [Teams Admin Center](https://admin.teams.microsoft.com)
+2. Navigate to **Teams apps** → **Manage apps**
+3. Click **Upload new app** → Upload your zip file
+4. The app requires no special permissions and should work immediately
+
+## Teams Configuration
+
+The app now uses a simplified approach and requires no special Teams configuration or RSC permissions. Simply upload and use!
+
+### Add App to Meeting
+
+1. **Schedule a meeting** in Teams or use "Meet Now"
+2. In the meeting, click **Apps** → **Meeting Cost Tracker**
+3. The app will appear in the side panel and show 30min/1hr cost estimates
+
+## Architecture
+
+- **Frontend**: React app with polling-based real-time updates (every 5 seconds)
+- **Backend**: Azure Functions with HTTP triggers (`joinMeeting`, `updateRate`, `getMeetingData`)
+- **Storage**: In-memory storage (replace with Azure Table Storage for production)
+- **Communication**: HTTP REST API instead of WebSocket for serverless compatibility
+
+## Deployment
+
+1. **Frontend**: Deploy to Azure Static Web Apps or any static hosting
+2. **Backend**: Deploy to Azure Functions
+3. **Teams App**: Upload manifest from `appPackage/` to Teams Admin Center
+
+## Troubleshooting
+
+### Common Issues
+
+#### No Common Issues
+- **The app now uses a simplified approach with no complex API dependencies**
+- **No RSC permissions required**
+- **Works in both scheduled meetings and "Meet Now" scenarios**
+
+#### Azure Functions Not Responding
+- **Cause**: Backend not running or wrong port
+- **Solution**: Start backend with `npm run dev:backend` (should run on port 7071)
+
+#### App Not Loading in Teams
+- **Cause**: ngrok URL changed or manifest not updated
+- **Solution**: 
+  1. Update manifest with current ngrok URL
+  2. Re-zip and re-upload the app package
+
+### Debug Console Logs
+
+The app should now work without console errors. If you see WebSocket connection issues, ensure the WebSocket server is running on port 3001.
+
+## API Reference
+
+### Teams SDK APIs Used
+
+- `microsoftTeams.app.initialize()` - Initialize Teams context
+- `microsoftTeams.app.getContext()` - Get meeting/user context
+
+### WebSocket Events
+
+- `join-meeting` - Join meeting room
+- `update-hourly-rate` - Update participant rate
+- `meeting-data` - Receive participant updates
+- `participant-rate-updated` - Rate change notifications
+
+## Production Deployment
+
+### 1. Deploy Frontend
+
+Deploy the React app to any hosting service:
+- **Azure Static Web Apps**
+- **Vercel**
+- **Netlify**
+- **GitHub Pages**
+
+### 2. Deploy WebSocket Server
+
+Deploy the Node.js WebSocket server:
+- **Azure App Service**
+- **Heroku**
+- **AWS EC2**
+- **Google Cloud Run**
+
+### 3. Update Manifest
+
+Update `appPackage/manifest.json` with production URLs and redeploy to Teams Admin Center.
+
+### 4. Multi-tenant Considerations
+
+For multi-tenant deployment:
+- Set Azure App Registration to **multi-tenant**
+- Implement tenant-specific configuration
+- Add proper error handling for different tenant policies
+
+## Design Decisions
+
+### Simplified Cost Estimation Approach
+
+The app shows **30-minute and 1-hour cost estimates** instead of attempting automatic meeting duration detection because:
+- The `getMeetingDetails()` API is Microsoft-internal only
+- No complex RSC permissions or backend services required
+- Works reliably across all meeting types (scheduled, "Meet Now", ad-hoc)
+- Provides immediate value without permission barriers
+
+## License
+
+This project is licensed under the MIT License.
+
+## Support
+
+For issues and questions:
+1. Check the troubleshooting section above
+2. Review Teams app development documentation
+3. Check console logs for debugging information
+
+---
+
+**Note**: This app now works without special Teams admin privileges or complex configuration. Simply upload and use!

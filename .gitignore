@@ -7,9 +7,16 @@ dist
 appPackage/build
 .deployment
 .localConfigs
+frontend/.env
+backend/.env
+.env
+
+fro
 
 # dependencies
 /node_modules
+frontend/node_modules
+backend/node_modules
 
 # testing
 /coverage

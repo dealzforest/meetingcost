@@ -1,0 +1,12 @@
+{
+  "name": "meeting-cost-tracker-backend",
+  "version": "1.0.0",
+  "dependencies": {},
+  "scripts": {
+    "start": "func start",
+    "deploy": "func azure functionapp publish meeting-cost-tracker"
+  },
+  "engines": {
+    "node": "18 || 20 || 22"
+  }
+}
