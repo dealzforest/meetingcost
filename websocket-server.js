@@ -20,11 +20,9 @@ io.on('connection', (socket) => {
     if (!meetings[meetingId]) {
       meetings[meetingId] = {
         meetingId,
-        participants: [],
-        scheduledDuration: 60
+        participants: []
       };
     }
-    
     
     const existingParticipant = meetings[meetingId].participants.find(p => p.id === userId);
     if (!existingParticipant) {

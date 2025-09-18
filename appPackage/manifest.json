@@ -1,6 +1,6 @@
 {
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.21/MicrosoftTeams.schema.json",
-  "version": "1.0.25",
+  "version": "1.0.28",
   "manifestVersion": "1.21",
   "id": "c59a1f51-4f95-43c0-ada5-16bec40b6c69",
   "name": {
@@ -40,15 +40,5 @@
   ],
   "webApplicationInfo": {
     "id": "f9ffe2c9-f4f2-4dd7-aaf0-c06e162d4927"
-  },
-  "authorization": {
-    "permissions": {
-      "resourceSpecific": [
-        {
-          "name": "OnlineMeeting.ReadBasic.Chat",
-          "type": "Application"
-        }
-      ]
-    }
   }
 }
