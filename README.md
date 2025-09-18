@@ -21,8 +21,7 @@ A Teams app for tracking meeting costs in real-time using Azure Functions archit
 
 ```
 ├── frontend/          # React app (Vite + TypeScript)
-├── backend/           # Azure Functions
-├── shared/            # Shared utilities and storage
+├── backend/           # Azure Functions (joinMeeting, updateRate, getMeetingData)
 ├── appPackage/        # Teams app manifest
 └── package.json       # Root workspace configuration
 ```
@@ -41,8 +40,8 @@ A Teams app for tracking meeting costs in real-time using Azure Functions archit
    This runs both frontend (port 3000) and backend (port 7071) concurrently.
 
 3. **Environment Configuration:**
-   - Copy `.env.example` to `.env` and configure as needed
-   - Frontend uses `REACT_APP_API_BASE_URL` to connect to Azure Functions
+   - Frontend uses `VITE_API_BASE_URL=http://localhost:7071/api` (already configured in `frontend/.env`)
+   - Backend uses Azure Functions configuration in `backend/local.settings.json`
 
 4. **Set up ngrok tunnel for Teams:**
    ```bash
@@ -55,7 +54,7 @@ A Teams app for tracking meeting costs in real-time using Azure Functions archit
 1. Go to [Azure Portal](https://portal.azure.com) → **App registrations**
 2. Click **"New registration"**
 3. Configure:
-   - **Name**: `Meeting-Cost-Tracker-TS-aad`
+   - **Name**: `Meeting-Cost-Tracker`
    - **Supported account types**: `Accounts in any organizational directory (Any Azure AD directory - Multitenant)`
    - **Redirect URI**: Leave blank for now
 4. Copy the **Application (client) ID** - you'll need this for the manifest
@@ -131,8 +130,9 @@ The app now uses a simplified approach and requires no special Teams configurati
 
 - **Frontend**: React app with polling-based real-time updates (every 5 seconds)
 - **Backend**: Azure Functions with HTTP triggers (`joinMeeting`, `updateRate`, `getMeetingData`)
-- **Storage**: In-memory storage (replace with Azure Table Storage for production)
-- **Communication**: HTTP REST API instead of WebSocket for serverless compatibility
+- **Storage**: In-memory storage with automatic 24-hour cleanup (`functionAppScaleLimit: 1` for consistency)
+- **Communication**: HTTP REST API with 5-second polling for real-time feel
+- **Data Management**: Meetings auto-deleted after 24 hours, single function instance prevents data inconsistency
 
 ## Deployment
 
@@ -161,7 +161,10 @@ The app now uses a simplified approach and requires no special Teams configurati
 
 ### Debug Console Logs
 
-The app should now work without console errors. If you see WebSocket connection issues, ensure the WebSocket server is running on port 3001.
+The app should work without console errors. If you see API connection issues:
+1. Ensure Azure Functions backend is running on port 7071
+2. Check that all three functions are loaded: `joinMeeting`, `updateRate`, `getMeetingData`
+3. Verify frontend can reach `http://localhost:7071/api`
 
 ## API Reference
 
@@ -170,12 +173,17 @@ The app should now work without console errors. If you see WebSocket connection 
 - `microsoftTeams.app.initialize()` - Initialize Teams context
 - `microsoftTeams.app.getContext()` - Get meeting/user context
 
-### WebSocket Events
+### Azure Functions API Endpoints
 
-- `join-meeting` - Join meeting room
-- `update-hourly-rate` - Update participant rate
-- `meeting-data` - Receive participant updates
-- `participant-rate-updated` - Rate change notifications
+- `POST /api/meeting/join` - Join meeting and add participant
+- `POST /api/meeting/update-rate` - Update participant hourly rate
+- `GET /api/meeting/{meetingId}` - Get meeting data and participants
+
+### Polling Mechanism
+
+- Frontend polls backend every 5 seconds for real-time updates
+- No WebSocket connections needed
+- Serverless-friendly architecture
 
 ## Production Deployment
 
@@ -187,13 +195,12 @@ Deploy the React app to any hosting service:
 - **Netlify**
 - **GitHub Pages**
 
-### 2. Deploy WebSocket Server
+### 2. Deploy Backend
 
-Deploy the Node.js WebSocket server:
-- **Azure App Service**
-- **Heroku**
-- **AWS EC2**
-- **Google Cloud Run**
+Deploy the Azure Functions:
+- **Azure Functions** (recommended)
+- **Azure Container Instances**
+- Set `functionAppScaleLimit: 1` in production host.json for data consistency
 
 ### 3. Update Manifest
 
@@ -215,6 +222,20 @@ The app shows **30-minute and 1-hour cost estimates** instead of attempting auto
 - No complex RSC permissions or backend services required
 - Works reliably across all meeting types (scheduled, "Meet Now", ad-hoc)
 - Provides immediate value without permission barriers
+
+### In-Memory Storage with Single Instance
+
+- Uses `global.meetings = {}` for simplicity and zero cost
+- `functionAppScaleLimit: 1` prevents data inconsistency across instances
+- Automatic 24-hour cleanup prevents memory bloat
+- Acceptable data loss trade-off for meeting cost tracking use case
+
+### HTTP Polling vs WebSocket
+
+- 5-second polling provides near real-time experience
+- Serverless-friendly (no persistent connections)
+- Works with Azure Functions scaling and cold starts
+- Simpler than Azure SignalR Service integration
 
 ## License
 
