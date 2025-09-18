@@ -1,6 +1,6 @@
 {
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.21/MicrosoftTeams.schema.json",
-  "version": "1.0.12",
+  "version": "1.0.25",
   "manifestVersion": "1.21",
   "id": "c59a1f51-4f95-43c0-ada5-16bec40b6c69",
   "name": {
@@ -8,7 +8,7 @@
     "full": "Full name for Meeting-Cost-Tracker-TS"
   },
   "developer": {
-    "name": "My App, Inc.",
+    "name": "Logesh Kumar",
     "websiteUrl": "https://secure-presumably-muskox.ngrok-free.app",
     "privacyUrl": "https://secure-presumably-muskox.ngrok-free.app/index.html#/privacy",
     "termsOfUseUrl": "https://secure-presumably-muskox.ngrok-free.app/index.html#/termsofuse"
@@ -46,10 +46,6 @@
       "resourceSpecific": [
         {
           "name": "OnlineMeeting.ReadBasic.Chat",
-          "type": "Application"
-        },
-        {
-          "name": "OnlineMeeting.ReadBasic.All",
           "type": "Application"
         }
       ]

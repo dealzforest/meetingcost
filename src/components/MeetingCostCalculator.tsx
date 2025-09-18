@@ -30,77 +30,86 @@ const useStyles = makeStyles({
   },
   inputGroup: {
     marginBottom: "16px",
-  },
-  timer: {
-    textAlign: "center",
-    marginBottom: "20px",
-  },
-  timerDisplay: {
-    fontSize: "28px",
-    fontWeight: "600",
-    color: "#0078d4",
-    margin: "8px 0",
-  },
-  controls: {
     display: "flex",
+    flexDirection: "column",
     gap: "8px",
-    justifyContent: "center",
-    marginBottom: "20px",
-    flexWrap: "wrap",
+  },
+  participantItem: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "12px",
+    border: "1px solid #e1dfdd",
+    borderRadius: "4px",
+    marginBottom: "8px",
   },
   participant: {
     display: "flex",
-    justifyContent: "space-between",
     alignItems: "center",
-    padding: "12px",
-    marginBottom: "8px",
-    backgroundColor: "#f8f9fa",
-    borderRadius: "6px",
-    border: "1px solid #e1dfdd",
+    gap: "12px",
   },
-  currentUser: {
-    backgroundColor: "#e6f3ff",
-    border: "1px solid #0078d4",
-  },
-  summary: {
+  avatar: {
+    width: "32px",
+    height: "32px",
+    borderRadius: "50%",
+    backgroundColor: "#0078d4",
+    color: "white",
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "16px",
-    backgroundColor: "#f3f2f1",
-    borderRadius: "6px",
-    marginTop: "16px",
-  },
-  loadingContainer: {
-    display: "flex",
-    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: "200px",
-    gap: "12px",
+    fontSize: "14px",
+    fontWeight: "bold",
+  },
+  name: {
+    fontWeight: "500",
+  },
+  rate: {
+    color: "#666",
+    fontSize: "14px",
+  },
+  costInfo: {
+    textAlign: "right",
+  },
+  total: {
+    fontSize: "20px",
+    fontWeight: "bold",
+    color: "#0078d4",
+  },
+  totalCost: {
+    fontSize: "24px",
+    fontWeight: "bold",
+    color: "#0078d4",
+    textAlign: "center",
+    marginTop: "16px",
+  },
+  status: {
+    textAlign: "center",
+    marginTop: "16px",
+    color: "#666",
   },
 });
 
-interface MeetingParticipant {
+interface Participant {
   id: string;
   name: string;
   hourlyRate: number;
+  isConnected: boolean;
 }
 
 interface MeetingData {
-  meetingId: string;
-  participants: MeetingParticipant[];
-  scheduledDuration: number; // in minutes
+  participants: Participant[];
+  totalCost: number;
+  duration: number;
 }
 
-export default function MeetingCostCalculator() {
+const MeetingCostCalculator = () => {
   const styles = useStyles();
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [meetingId, setMeetingId] = useState<string>("");
-  const [userId, setUserId] = useState<string>("");
-  const [userName, setUserName] = useState<string>("");
-  const [currentUserRate, setCurrentUserRate] = useState<number>(0);
-  const [meetingData, setMeetingData] = useState<MeetingData | null>(null);
+  const [meetingId, setMeetingId] = useState<string>('');
+  const [userId, setUserId] = useState<string>('');
+  const [userName, setUserName] = useState<string>('');
+  const [currentUserRate, setCurrentUserRate] = useState<number>(20);
+  const [meetingData, setMeetingData] = useState<MeetingData>({ participants: [], totalCost: 0, duration: 0 });
   const [scheduledDuration, setScheduledDuration] = useState<number>(60);
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
@@ -108,54 +117,48 @@ export default function MeetingCostCalculator() {
   // Load user profile and meeting details from Teams context
   useEffect(() => {
     const loadUserProfile = async () => {
-      console.log('[MeetingCostCalculator] Starting to load user profile and meeting details');
       try {
         await microsoftTeams.app.initialize();
-        console.log('[MeetingCostCalculator] Teams SDK initialized successfully');
         
         const context = await microsoftTeams.app.getContext();
-        console.log('[MeetingCostCalculator] Teams context:', context);
         const userId = context.user?.id || 'default-user';
         const userName = context.user?.displayName || context.user?.userPrincipalName || 'Unknown User';
         const meetingId = context.meeting?.id || context.chat?.id || 'demo-meeting';
-        
+        console.log('[MeetingCostCalculator] Full app object:', context.app);
+        console.log('[MeetingCostCalculator] Installation context:', {
+          meetingId: context.meeting?.id,
+          chatId: context.chat?.id,
+          teamId: context.team?.internalId,
+          frameContext: context.page?.frameContext,
+          isInMeeting: context.meeting ? true : false,
+          appId: context.app?.host?.name
+        });
+
         // Try to get meeting duration from Teams API
-        let duration = 60; // Default to 1 hour
-        
         try {
-          microsoftTeams.meeting.getMeetingDetails((error, meetingDetails) => {
+          // Try getMeetingDetails API for automatic duration detection
+          microsoftTeams.meeting.getMeetingDetails((error, meetingDetailsResponse) => {
             if (error) {
-              console.log('Could not fetch meeting details:', error);
-              return;
-            }
-            
-            console.log('Meeting details:', meetingDetails);
-            
-            if (meetingDetails?.details) {
-              const details = meetingDetails.details;
-              
-              // Check if this is a scheduled meeting (IMeetingDetails) vs call (ICallDetails)
-              if ('scheduledEndTime' in details && details.scheduledStartTime && details.scheduledEndTime) {
-                const startTime = new Date(details.scheduledStartTime);
-                const endTime = new Date(details.scheduledEndTime);
-                const calculatedDuration = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
-                console.log(`Calculated duration: ${calculatedDuration} minutes`);
-                setScheduledDuration(Math.max(calculatedDuration, 1));
+              console.log('[MeetingCostCalculator] getMeetingDetails failed:', error);
+              if (error.errorCode === 1000) {
+                console.log('[MeetingCostCalculator] Permission denied - using manual duration input');
               }
-              else {
-                console.log('This appears to be a call rather than a scheduled meeting - no duration available');
-              }
+            } else if (meetingDetailsResponse?.details && 'scheduledEndTime' in meetingDetailsResponse.details) {
+              const startTime = new Date(meetingDetailsResponse.details.scheduledStartTime);
+              const endTime = new Date(meetingDetailsResponse.details.scheduledEndTime);
+              const calculatedDuration = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
+              console.log(`[MeetingCostCalculator] Auto-detected duration: ${calculatedDuration} minutes`);
+              setScheduledDuration(Math.max(calculatedDuration, 1));
             }
           });
         } catch (error) {
-          console.log('Could not fetch meeting details:', error);
-          // Fall back to default duration
+          console.log('[MeetingCostCalculator] Exception calling getMeetingDetails:', error);
         }
         
         setUserId(userId);
         setUserName(userName);
         setMeetingId(meetingId);
-        setScheduledDuration(Math.max(duration, 1)); // Ensure minimum 1 minute
+        setScheduledDuration(Math.max(scheduledDuration, 1)); // Ensure minimum 1 minute
         
       } catch (error) {
         // Fallback for standalone mode
@@ -201,10 +204,6 @@ export default function MeetingCostCalculator() {
         setMeetingData(data);
       });
 
-      newSocket.on('connect_error', (error: any) => {
-        console.error('WebSocket connection failed:', error.message);
-      });
-
       setSocket(newSocket);
     }
 
@@ -216,50 +215,48 @@ export default function MeetingCostCalculator() {
   }, [meetingId, userId, userName, isLoadingUser]);
 
   const updateHourlyRate = () => {
-    if (socket && socket.connected && currentUserRate > 0) {
-      setIsConnecting(true);
+    if (socket && socket.connected) {
+      socket.emit('update-hourly-rate', currentUserRate);
+      setIsConnecting(false);
       
-      socket.emit('update-hourly-rate', {
+      socket.emit('join-meeting', {
         meetingId,
         userId,
         userName,
         hourlyRate: currentUserRate
       });
-      
-      setTimeout(() => {
-        setIsConnecting(false);
-      }, 1000);
+    } else {
+      setIsConnecting(true);
     }
   };
 
-  const calculateIndividualCost = (participant: MeetingParticipant): number => {
-    return participant.hourlyRate * (scheduledDuration / 60);
+  const calculateTotalCost = () => {
+    return meetingData.participants
+      ? meetingData.participants.reduce((total, participant) => total + (participant.hourlyRate / 60) * scheduledDuration, 0)
+      : 0;
   };
 
-  const calculateTotalCost = (): number => {
-    if (!meetingData) return 0;
-    return meetingData.participants.reduce((total, participant) => {
-      return total + calculateIndividualCost(participant);
-    }, 0);
+  const calculateAverageCost = () => {
+    if (!meetingData.participants || meetingData.participants.length === 0) return 0;
+    return meetingData.participants.reduce((total, participant) => total + participant.hourlyRate, 0) / meetingData.participants.length;
   };
 
-  const calculateAverageCost = (): number => {
-    if (!meetingData || meetingData.participants.length === 0) return 0;
-    return calculateTotalCost() / meetingData.participants.length;
-  };
-
-  const getCurrentUserCost = (): number => {
-    if (!meetingData) return currentUserRate * (scheduledDuration / 60);
+  const getCurrentUserCost = () => {
+    if (!meetingData.participants) return currentUserRate * scheduledDuration / 60;
     const currentUser = meetingData.participants.find(p => p.id === userId);
-    return currentUser ? calculateIndividualCost(currentUser) : 0;
+    return currentUser ? currentUser.hourlyRate * scheduledDuration / 60 : 0;
   };
 
   if (isLoadingUser) {
     return (
       <div className={styles.container}>
-        <div className={styles.loadingContainer}>
-          <Spinner size="large" />
-          <Text>Loading...</Text>
+        <div className={styles.card}>
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <Spinner size="large" />
+            <Text style={{ display: 'block', marginTop: '16px' }}>
+              Loading meeting details...
+            </Text>
+          </div>
         </div>
       </div>
     );
@@ -268,101 +265,127 @@ export default function MeetingCostCalculator() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <Text size={600} weight="bold">Meeting Cost Tracker</Text>
+        <Text size={900} weight="bold">Meeting Cost Tracker</Text>
+        <Text style={{ display: 'block', marginTop: '8px', color: '#666' }}>
+          Track the cost of your meeting in real-time
+        </Text>
       </div>
 
       <div className={styles.card}>
-        <Text size={500} weight="semibold" style={{ marginBottom: "16px" }}>
-          Welcome, {userName}!
-        </Text>
-        
-        <div className={styles.inputGroup} style={{ marginBottom: "16px" }}>
-          <Text size={300} style={{ color: "#605e5c" }}>
-            Duration: {scheduledDuration} minutes {scheduledDuration === 60 ? '(default)' : '(from Teams)'}
-          </Text>
-        </div>
-        
         <div className={styles.inputGroup}>
-          <Label htmlFor="userRate" style={{ fontWeight: "600" }}>
-            Your Hourly Rate ($)
-          </Label>
+          <Label htmlFor="user-name">Your Name</Label>
           <Input
-            id="userRate"
+            id="user-name"
+            value={userName}
+            readOnly
+            style={{ backgroundColor: '#f5f5f5' }}
+          />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <Label htmlFor="hourly-rate">Your Hourly Rate ($)</Label>
+          <Input
+            id="hourly-rate"
             type="number"
             value={currentUserRate.toString()}
-            onChange={(_, data) => setCurrentUserRate(Number(data.value) || 0)}
-            placeholder="Enter your hourly rate"
+            onChange={(e) => setCurrentUserRate(parseFloat(e.target.value) || 0)}
+          />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <Label htmlFor="meeting-duration">Meeting Duration (minutes)</Label>
+          <Input
+            id="meeting-duration"
+            type="number"
+            value={scheduledDuration.toString()}
+            onChange={(e) => setScheduledDuration(Math.max(parseInt(e.target.value) || 1, 1))}
           />
         </div>
 
         <Button
           appearance="primary"
           onClick={updateHourlyRate}
-          disabled={currentUserRate <= 0 || isConnecting}
-          style={{ width: "100%", marginTop: "16px" }}
+          disabled={isConnecting}
+          style={{ width: '100%', marginTop: '16px' }}
         >
-          {isConnecting ? "Updating..." : "Update Rate"}
+          {isConnecting ? 'Connecting...' : 'Update Rate & Join Meeting'}
         </Button>
       </div>
 
       <div className={styles.card}>
-        <div className={styles.summary}>
-          <div>
-            <Text size={300} style={{ color: "#605e5c" }}>Your Meeting Cost</Text>
-            <Text size={500} weight="bold" style={{ color: "#0078d4" }}>
-              ${getCurrentUserCost().toFixed(2)}
-            </Text>
-            <Text size={200} style={{ color: "#605e5c" }}>
-              ({scheduledDuration} min × ${currentUserRate || 0}/hour)
-            </Text>
-          </div>
+        <Text size={600} weight="semibold" style={{ marginBottom: '16px' }}>
+          Meeting Participants
+        </Text>
+        
+        {meetingData.participants && meetingData.participants.length > 0 ? (
+          meetingData.participants.map((participant) => (
+            <div key={participant.id} className={styles.participantItem}>
+              <div className={styles.participant}>
+                <div className={styles.avatar}>
+                  {participant.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className={styles.name}>{participant.name}</div>
+                  <div className={styles.rate}>
+                    ${participant.hourlyRate}/hour
+                    {participant.isConnected && (
+                      <span style={{ color: '#10b26c', marginLeft: '8px' }}>● Online</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className={styles.costInfo}>
+                <div className={styles.total}>
+                  ${((participant.hourlyRate / 60) * scheduledDuration).toFixed(2)}
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>
+                  {scheduledDuration} min
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <Text style={{ color: '#666', textAlign: 'center', padding: '20px' }}>
+            No participants yet. Click "Update Rate & Join Meeting" to join.
+          </Text>
+        )}
+      </div>
+
+      <div className={styles.card}>
+        <Text size={600} weight="semibold" style={{ marginBottom: '16px' }}>
+          Cost Summary
+        </Text>
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <Text>Your Cost:</Text>
+          <Text weight="semibold">${getCurrentUserCost().toFixed(2)}</Text>
+        </div>
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <Text>Average Rate:</Text>
+          <Text weight="semibold">${calculateAverageCost().toFixed(2)}/hour</Text>
+        </div>
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <Text>Total Participants:</Text>
+          <Text weight="semibold">{meetingData.participants?.length || 0}</Text>
+        </div>
+        
+        <div className={styles.totalCost}>
+          Total Meeting Cost: ${calculateTotalCost().toFixed(2)}
         </div>
       </div>
 
-      {meetingData && meetingData.participants.length > 0 && (
-        <div className={styles.card}>
-          <Text size={500} weight="semibold" style={{ marginBottom: "16px" }}>
-            Meeting Participants ({meetingData.participants.length})
-          </Text>
-          
-          {meetingData.participants.map((participant) => (
-            <div key={participant.id} className={styles.participant}>
-              <div>
-                <Text weight="semibold">{participant.name}</Text>
-                <div>
-                  <Text size={300} style={{ color: "#605e5c" }}>
-                    {participant.hourlyRate > 0 ? "Rate set" : "Rate pending"}
-                  </Text>
-                </div>
-              </div>
-              <Text size={300} style={{ color: "#605e5c" }}>
-                {participant.hourlyRate > 0 ? "✓ Configured" : "⏳ Pending"}
-              </Text>
-            </div>
-          ))}
-          
-          <div className={styles.summary} style={{ marginTop: "16px" }}>
-            <div>
-              <Text size={300} style={{ color: "#605e5c" }}>Total Meeting Cost</Text>
-              <Text size={500} weight="bold" style={{ color: "#d13438" }}>
-                ${calculateTotalCost().toFixed(2)}
-              </Text>
-              <Text size={200} style={{ color: "#605e5c" }}>
-                ({meetingData.participants.length} participants × {scheduledDuration} min)
-              </Text>
-            </div>
-          </div>
-          
-          <div className={styles.summary} style={{ marginTop: "8px" }}>
-            <div>
-              <Text size={300} style={{ color: "#605e5c" }}>Average Cost per Participant</Text>
-              <Text size={500} weight="bold" style={{ color: "#0078d4" }}>
-                ${calculateAverageCost().toFixed(2)}
-              </Text>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className={styles.status}>
+        <Text size={200} style={{ color: '#666' }}>
+          {socket?.connected 
+            ? `Connected to meeting` 
+            : 'Disconnected - Click "Update Rate & Join Meeting" to reconnect'
+          }
+        </Text>
+      </div>
     </div>
   );
-}
+};
+
+export default MeetingCostCalculator;
