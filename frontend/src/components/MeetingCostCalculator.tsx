@@ -233,10 +233,10 @@ const MeetingCostCalculator = () => {
   };
 
 
-  const getAverageRate = (): number => {
+  const getTotalCost = (minutes: number): number => {
     if (!meetingData || meetingData.participants.length === 0) return 0;
     const totalRate = meetingData.participants.reduce((sum, p) => sum + p.hourlyRate, 0);
-    return totalRate / meetingData.participants.length;
+    return totalRate * (minutes / 60);
   };
 
   if (isLoadingUser) {
@@ -343,9 +343,16 @@ const MeetingCostCalculator = () => {
           </div>
           
           <div className={styles.summaryRow}>
-            <Text size={400} style={{ color: "#323130" }}>Average Rate:</Text>
+            <Text size={400} style={{ color: "#323130" }}>Total Meeting Cost (30 min):</Text>
             <Text size={400} weight="bold" style={{ color: "#323130" }}>
-              ${getAverageRate().toFixed(2)}/hour
+              ${getTotalCost(30).toFixed(2)}
+            </Text>
+          </div>
+          
+          <div className={styles.summaryRow}>
+            <Text size={400} style={{ color: "#323130" }}>Total Meeting Cost (1 hour):</Text>
+            <Text size={400} weight="bold" style={{ color: "#323130" }}>
+              ${getTotalCost(60).toFixed(2)}
             </Text>
           </div>
           
