@@ -10,7 +10,7 @@ sudo apt update && sudo apt upgrade -y
 
 # Install Node.js 20.x
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs npm
+sudo apt install nodejs
 
 # Verify installation
 node --version
@@ -139,7 +139,7 @@ sudo nano /etc/nginx/sites-available/meetingcost
 
 ```nginx
 server {
-    server_name <your_domain>;
+    server_name meeting-cost-tracker.accesspearl.in;
 
     # Frontend
     location / {
@@ -179,7 +179,7 @@ sudo systemctl enable nginx
 ```bash
 sudo apt update
 sudo apt install certbot python3-certbot-nginx -y
-sudo certbot --nginx -d <your_domain>
+sudo certbot --nginx -d meeting-cost-tracker.accesspearl.in
 ```
 
 ## Step 8.5 How to Point Your Domain to Your Server IP
