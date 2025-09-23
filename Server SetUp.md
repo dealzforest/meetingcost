@@ -367,10 +367,3 @@ Replace:
 * Security group allows **22, 80, 443 only**
 * Services restart automatically after reboot
 * Teams app loads correctly with Azure AD authentication
-
-```
-
----
-
-Do you want me to also prepare a **ready-to-use `manifest.json` file** for the Teams app (with placeholders you just replace), so you don’t have to edit in the Developer Portal UI?
-```
