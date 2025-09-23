@@ -11,4 +11,8 @@ export default defineConfig({
     port: 3000,
     allowedHosts: process.env.ALLOWED_HOSTS ? process.env.ALLOWED_HOSTS.split(",") : undefined,
   },
+  preview: {
+    port: 3000,
+    allowedHosts: process.env.ALLOWED_HOSTS ? process.env.ALLOWED_HOSTS.split(",") : undefined,
+  },
 });
