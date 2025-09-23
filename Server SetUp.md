@@ -108,7 +108,20 @@ pm2 start func --name "backend" -- start --host 0.0.0.0 --port 7071
 
 # Start frontend with PM2
 cd /srv/meetingcost/frontend
-pm2 start npm --name "frontend" -- run preview -- --host 0.0.0.0 --port 3000
+# Create .env 
+sudo vi .env
+```
+VITE_API_BASE_URL=https://meeting-cost-tracker.accesspearl.in/api
+ALLOWED_HOSTS="meeting-cost-tracker.accesspearl.in"
+
+```bash
+# click "i" to start the edit mode
+# update the VITE_API_BASE_URL and ALLOWED_HOSTS
+# click esc
+# :wq!
+
+# Create pm2 for frontend
+pm2 start "dotenv -e .env npm run preview -- --host 0.0.0.0 --port 3000" --name frontend
 
 # Check status
 pm2 status
